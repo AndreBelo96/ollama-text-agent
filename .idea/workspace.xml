@@ -5,6 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a5a43d02-a2b7-4f06-a7fd-209cc758c8f8" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Prova.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Prova.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Prova_corrected.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Prova_corrected.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Prova_corretto.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Prova_traduzione.txt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -30,7 +35,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;
+    &quot;git-widget-placeholder&quot;: &quot;develop&quot;
   }
 }</component>
   <component name="SharedIndexes">

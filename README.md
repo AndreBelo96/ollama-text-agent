@@ -4,7 +4,7 @@ Desktop app to correct and translate .txt files using a local LLM via Ollama.
 
 ## Requirements
 - Python 3.x
-- [Ollama](https://ollama.com) installed and running with the Mistral model
+- [Ollama](https://ollama.com) installed and running with the qwen2.5:14b model
 
 ## Installation
 pip install requests

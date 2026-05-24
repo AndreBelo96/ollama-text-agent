@@ -14,5 +14,5 @@ python main.py
 
 ## Features
 - Grammar and punctuation correction
-- Italian → English translation
+- Multi translation
 - Output saved as a separate file (_corrected.txt / _translated.txt)

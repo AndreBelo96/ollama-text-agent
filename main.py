@@ -3,24 +3,55 @@ from tkinter import filedialog, messagebox, scrolledtext
 import requests
 import threading
 
-SYSTEM_PROMPT = """You are a text processing assistant with exactly two capabilities:
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "correct_text",
+            "description": "Correct grammar, punctuation and improve readability of the loaded text",
+            "parameters": {"type": "object", "properties": {}, "required": []}
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "translate_text",
+            "description": "Translate the loaded text to another language",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "target_language": {
+                        "type": "string",
+                        "description": "The language to translate to, e.g. English, French, Spanish"
+                    }
+                },
+                "required": ["target_language"]
+            }
+        }
+    }
+]
 
-1. CORRECTION: Fix grammar, punctuation and improve readability of text.
-   - Do NOT change meaning
-   - Do NOT invent details
-   - Keep the text as close to the original as possible
+ROUTER_PROMPT = """You are a text processing assistant. A text file has been loaded.
+Based on the user's request, decide which tool to call:
+- correct_text: if the user wants grammar/punctuation fixes
+- translate_text: if the user wants the text translated (extract the target language)
+- No tool: if the request is about something else entirely
 
-2. TRANSLATION: Translate a text from the given language to another specified by the user.
-   - Do NOT summarize
-   - Do NOT add content
-   - Maintain original meaning faithfully
+Only call a tool if the request clearly maps to one of the two capabilities."""
 
+CORRECTION_PROMPT = """Fix grammar, punctuation and improve readability of this text.
 Rules:
-- If the user requests a correction → output ONLY the corrected text. No preamble, no explanation.
-- If the user requests a translation → output ONLY the translated text. No preamble, no explanation.
-- If the user requests anything else → respond with exactly: "I can only correct or translate the loaded text."
-- Never process text unless explicitly asked.
-- The text to process is always marked as [TEXT]."""
+- Do NOT change meaning
+- Do NOT invent details  
+- Keep the text as close to the original as possible
+Output ONLY the corrected text, no preamble or explanation."""
+
+TRANSLATION_PROMPT = """Translate this text to {target_language}.
+Rules:
+- Do NOT summarize
+- Do NOT add content
+- Maintain original meaning faithfully
+Output ONLY the translated text, no preamble or explanation."""
 
 
 class TextAgent:
@@ -33,31 +64,61 @@ class TextAgent:
         with open(path, "r", encoding="utf-8") as f:
             self.file_content = f.read()
 
-    def detect_suffix(self, request):
-        r = request.lower()
-        if any(w in r for w in ["translat", "traduc"]):
-            return "translated"
-        return "corrected"
+    def route(self, user_request):
+        """Call 1: LLM decides which tool to use"""
+        response = requests.post(
+            "http://localhost:11434/api/chat",
+            json={
+                "model": "qwen2.5:14b",
+                "messages": [
+                    {"role": "system", "content": ROUTER_PROMPT},
+                    {"role": "user", "content": user_request}
+                ],
+                "tools": TOOLS,
+                "stream": False
+            }
+        )
+        response.raise_for_status()
+        return response.json()["message"]
+
+    def execute(self, tool_name, tool_args):
+        """Call 2: LLM actually executes the chosen operation"""
+        if tool_name == "correct_text":
+            prompt = f"{CORRECTION_PROMPT}\n\n{self.file_content}"
+            suffix = "corrected"
+        elif tool_name == "translate_text":
+            target = tool_args.get("target_language", "English")
+            prompt = f"{TRANSLATION_PROMPT.format(target_language=target)}\n\n{self.file_content}"
+            suffix = "translated"
+        else:
+            return None, None
+
+        response = requests.post(
+            "http://localhost:11434/api/chat",
+            json={
+                "model": "qwen2.5:14b",
+                "messages": [{"role": "user", "content": prompt}],
+                "stream": False
+            }
+        )
+        response.raise_for_status()
+        result = response.json()["message"]["content"]
+        return result, suffix
 
     def process(self, user_request):
-        message = f"[TEXT]:\n{self.file_content}\n\n[REQUEST]:\n{user_request}"
-        try:
-            response = requests.post(
-                "http://localhost:11434/api/chat",
-                json={
-                    "model": "qwen2.5:14b",
-                    "messages": [
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": message}
-                    ],
-                    "stream": False
-                }
-            )
-            response.raise_for_status()
-            return response.json()["message"]["content"]
-        except Exception as e:
-            print(f"Ollama failed: {e}")
-            return None
+        # Step 1: route
+        message = self.route(user_request)
+        tool_calls = message.get("tool_calls", [])
+
+        if not tool_calls:
+            # LLM didn't call any tool → out of scope
+            return None, None, "I can only correct or translate the loaded text."
+
+        # Step 2: execute
+        tool_name = tool_calls[0]["function"]["name"]
+        tool_args = tool_calls[0]["function"]["arguments"]
+        result, suffix = self.execute(tool_name, tool_args)
+        return result, suffix, None
 
     def save(self, content, suffix):
         output_path = self.file_path.replace(".txt", f"_{suffix}.txt")
@@ -71,7 +132,6 @@ class TextAgent:
 
 
 agent = TextAgent()
-
 
 def append_to_display(sender, message):
     output_display.config(state=tk.NORMAL)
@@ -88,7 +148,7 @@ def load_file():
     filename = path.split("/")[-1]
     file_label.config(text=f"📄 {filename}", fg="green")
     send_button.config(state=tk.NORMAL)
-    append_to_display("System", f"File loaded: {filename}\nType your request (e.g. 'correct it', 'translate it to English').")
+    append_to_display("System", f"File loaded: {filename}\nTell me what to do with it.")
 
 
 def send_request(event=None):
@@ -103,36 +163,30 @@ def send_request(event=None):
     user_input.delete("1.0", tk.END)
     append_to_display("You", request)
     send_button.config(state=tk.DISABLED)
-    status_label.config(text="Processing...")
-
-    # Detect suffix before threading
-    suffix = agent.detect_suffix(request)
+    status_label.config(text="Thinking...")
 
     def run():
-        result = agent.process(request)
-        root.after(0, lambda: on_result(result, suffix))
+        result, suffix, refusal = agent.process(request)
+        root.after(0, lambda: on_result(result, suffix, refusal))
 
     threading.Thread(target=run, daemon=True).start()
 
 
-def on_result(result, suffix):
+def on_result(result, suffix, refusal):
     status_label.config(text="")
     send_button.config(state=tk.NORMAL)
+
+    if refusal:
+        append_to_display("Agent", refusal)
+        return
 
     if not result:
         messagebox.showerror("Error", "Ollama is not responding. Make sure it's running.")
         return
 
-    if result.strip().startswith("I can only"):
-        append_to_display("Agent", result)
-        return
-
-    # Salva il file
     output_path = agent.save(result, suffix)
-
-    # Mostra solo conferma in chat, non il testo intero
     filename = output_path.split("/")[-1]
-    append_to_display("Agent", f"Done! File saved as: {filename}")
+    append_to_display("Agent", f"✅ Done! File saved as: {filename}")
 
 
 def clear_all():
@@ -144,13 +198,11 @@ def clear_all():
     send_button.config(state=tk.DISABLED)
     status_label.config(text="")
 
-
 # ── GUI ────────────────────────────────────────────────────────
 root = tk.Tk()
-root.title("AI Text Agent")
+root.title("AI Text Agent — Tool Calling")
 root.geometry("800x700")
 
-# Top bar
 top_frame = tk.Frame(root)
 top_frame.pack(fill=tk.X, padx=10, pady=8)
 
@@ -159,13 +211,11 @@ file_label = tk.Label(top_frame, text="No file loaded", fg="gray")
 file_label.pack(side=tk.LEFT, padx=10)
 tk.Button(top_frame, text="Clear", command=clear_all, width=8).pack(side=tk.RIGHT)
 
-# Output display
 output_display = scrolledtext.ScrolledText(
     root, state=tk.DISABLED, wrap=tk.WORD, font=("Arial", 11)
 )
 output_display.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
-# Input area
 input_frame = tk.Frame(root)
 input_frame.pack(fill=tk.X, padx=10, pady=5)
 
@@ -180,7 +230,6 @@ send_button = tk.Button(
 )
 send_button.pack(side=tk.RIGHT, padx=(5, 0))
 
-# Bottom bar
 bottom_frame = tk.Frame(root)
 bottom_frame.pack(fill=tk.X, padx=10, pady=5)
 

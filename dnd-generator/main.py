@@ -187,6 +187,7 @@ def generate_narrative(campaign):
        - How they can help or hinder the party
     
     Rules:
+    - IMPORTANT: Write ONLY in English. Do not use any other language under any circumstances.
     - Write in second person for player-facing text ("You enter...", "You see...")
     - Write in third person for DM notes
     - Be vivid, atmospheric, and detailed

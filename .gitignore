@@ -1,4 +1,16 @@
-venv/
-__pycache__/
+# Models (too large for git)
+models/
+
+# Output files
+output/
+
+# Environment
 .env
+__pycache__/
 *.pyc
+.venv/
+venv/
+
+# IDE
+.idea/
+*.xml

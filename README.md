@@ -28,16 +28,18 @@ python text-agent/main.py
 
 A multi-agent AI pipeline that generates complete D&D campaigns with narrative text and images.
 
-**Stack:** Python, Ollama, qwen2.5:14b, Hugging Face (FLUX.1)
+**Stack:** Python, Tkinter, Ollama, qwen2.5:14b, Stable Diffusion (CPU)
 
-**How it works:**
+**Architecture:**
 
 | Agent | Role | Runs on |
 |---|---|---|
 | Agent 1 | Generates campaign structure (JSON) | Ollama local |
-| Agent 2 | Converts descriptions to image prompts | Ollama local |
-| Agent 3 | Generates images from prompts | Hugging Face API |
+| Agent 2 | Converts descriptions to SD image prompts | Ollama local |
+| Agent 3 | Generates images | Local CPU (Stable Diffusion) |
 | Agent 4 | Writes full narrative from campaign data | Ollama local |
+
+Agents 3 and 4 run in parallel to save time.
 
 **Output:**
 - `campaign.txt` — full narrative for the DM and players
@@ -46,16 +48,19 @@ A multi-agent AI pipeline that generates complete D&D campaigns with narrative t
 
 **Requirements:**
 - [Ollama](https://ollama.com) running with `qwen2.5:14b`
-- Hugging Face account with API token
+- Python 3.10+
 
-**Setup:**
+**Install dependencies:**
 ```bash
-pip install requests python-dotenv huggingface_hub pillow
+pip install requests python-dotenv diffusers transformers accelerate pillow tkinter
 ```
 
-Create a `.env` file:
+**First time setup:**
+```bash
+python dnd-generator/setup.py
+```
 
-HF_TOKEN=your_token_here
+This will download Stable Diffusion v1.5 (~4GB) into `dnd-generator/models/`.
 
 **Run:**
 ```bash
@@ -66,4 +71,4 @@ python dnd-generator/main.py
 
 ## Requirements
 - Python 3.10+
-- Ollama installed and running
+- [Ollama](https://ollama.com) installed and running

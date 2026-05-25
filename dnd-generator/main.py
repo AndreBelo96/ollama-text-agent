@@ -1,16 +1,21 @@
+import tkinter as tk
+from tkinter import scrolledtext
 import requests
 import os
 import json
+import threading
+from diffusers import StableDiffusionPipeline
 from dotenv import load_dotenv
 from pathlib import Path
-from huggingface_hub import InferenceClient
+from PIL import Image, ImageTk
+
+pipe = None
 
 load_dotenv()
 
 HF_TOKEN = os.getenv("HF_TOKEN")
 OLLAMA_URL = "http://localhost:11434/api/chat"
 MODEL = "qwen2.5:14b"
-HF_MODEL = "stabilityai/stable-diffusion-xl-base-1.0"
 
 
 # ── AGENT 1: Campaign Generator ─────────────────────────────
@@ -137,25 +142,27 @@ def generate_image_prompts(campaign):
     return json.loads(raw)
 
 # ── AGENT 3: Image Generator ─────────────────────────────────
-def generate_images(prompts, output_dir):
-    print("Agent 3: Generating images...")
+def load_pipeline():
+    global pipe
+    if pipe is None:
+        print("Loading image model...")
+        model_path = Path(__file__).parent / "models" / "stable-diffusion-v1-5"
+        pipe = StableDiffusionPipeline.from_pretrained(str(model_path))
+        pipe = pipe.to("cpu")
+    return pipe
 
-    client = InferenceClient(
-        provider="wavespeed",
-        api_key=HF_TOKEN,
-    )
+def generate_images(prompts, output_dir, on_image_saved):
+    print("Agent 3: Generating images...")
+    pipeline = load_pipeline()
 
     for key, prompt in prompts.items():
         print(f"  Generating image: {key}...")
         try:
-            image = client.text_to_image(
-                prompt,
-                model="black-forest-labs/FLUX.1-dev",
-            )
+            image = pipeline(prompt).images[0]
             image_path = output_dir / f"{key}.png"
             image.save(image_path)
+            on_image_saved(key, image_path)
             print(f"  Saved: {image_path}")
-
         except Exception as e:
             print(f"  Failed {key}: {e}")
 
@@ -239,23 +246,164 @@ def save_prompts_md(prompts, campaign, output_dir):
         f.write("\n".join(lines))
     print(f"Prompts saved: {md_path}")
 
-# ── MAIN ──────────────────────────────────────────────────────
-def main():
-    output_dir = Path("output")
-    output_dir.mkdir(exist_ok=True)
+def save_files(narrative, prompts, campaign, output_dir):
+    # campaign.txt
+    lines = [
+        f"{'='*60}",
+        f"  {campaign['title'].upper()}",
+        f"{'='*60}\n",
+        narrative,
+        f"\n{'='*60}"
+    ]
+    (output_dir / "campaign.txt").write_text("\n".join(lines), encoding="utf-8")
 
-    campaign = generate_campaign()
-    print(f"\nCampaign: {campaign['title']}\n")
+    # prompts.md
+    md = [f"# Image Prompts — {campaign['title']}\n"]
+    for key, prompt in prompts.items():
+        md.append(f"## {key}\n```\n{prompt}\n```\n")
+    (output_dir / "prompts.md").write_text("\n".join(md), encoding="utf-8")
 
-    prompts = generate_image_prompts(campaign)
-    narrative = generate_narrative(campaign)
+# ── GUI ───────────────────────────────────────────────────────
 
-    save_campaign_text(narrative, campaign, output_dir)
-    save_prompts_md(prompts, campaign, output_dir)
+class DnDApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("DnD Campaign Generator")
+        self.root.geometry("900x750")
+        self.image_refs = []
+        self.output_dir = Path("output")
+        self.output_dir.mkdir(exist_ok=True)
+        self.build_ui()
 
-    #generate_images(prompts, output_dir)
+    def build_ui(self):
+        # Header
+        tk.Label(self.root, text="⚔️  DnD Campaign Generator", font=("Arial", 20, "bold")).pack(pady=15)
 
-    print("\nDone! Check the output/ folder.")
+        # Generate button
+        self.gen_button = tk.Button(
+            self.root, text="Generate Campaign",
+            command=self.start_generation,
+            font=("Arial", 13), width=20, height=2,
+            bg="#4a4a8a", fg="white"
+        )
+        self.gen_button.pack(pady=5)
 
-if __name__ == "__main__":
-    main()
+        # Agent status frame
+        status_frame = tk.Frame(self.root)
+        status_frame.pack(pady=10)
+
+        self.agent_labels = {}
+        agents = [
+            ("agent1", "Agent 1 — Campaign Generator"),
+            ("agent2", "Agent 2 — Prompt Engineer"),
+            ("agent3", "Agent 3 — Image Generator"),
+            ("agent4", "Agent 4 — Narrator"),
+        ]
+        for key, text in agents:
+            row = tk.Frame(status_frame)
+            row.pack(anchor="w", pady=2)
+            tk.Label(row, text=text, font=("Arial", 11), width=30, anchor="w").pack(side=tk.LEFT)
+            lbl = tk.Label(row, text="⏸ Waiting", font=("Arial", 11), fg="gray", width=20, anchor="w")
+            lbl.pack(side=tk.LEFT)
+            self.agent_labels[key] = lbl
+
+        # Narrative text
+        tk.Label(self.root, text="Campaign Narrative", font=("Arial", 12, "bold")).pack(pady=(10, 2))
+        self.narrative_box = scrolledtext.ScrolledText(
+            self.root, height=12, wrap=tk.WORD,
+            font=("Arial", 10), state=tk.DISABLED
+        )
+        self.narrative_box.pack(fill=tk.X, padx=15, pady=5)
+
+        # Images frame
+        tk.Label(self.root, text="Generated Images", font=("Arial", 12, "bold")).pack(pady=(10, 2))
+        self.images_frame = tk.Frame(self.root)
+        self.images_frame.pack(pady=5)
+
+    def set_agent_status(self, key, status, color):
+        self.root.after(0, lambda: self.agent_labels[key].config(text=status, fg=color))
+
+    def set_narrative(self, text):
+        def update():
+            self.narrative_box.config(state=tk.NORMAL)
+            self.narrative_box.delete("1.0", tk.END)
+            self.narrative_box.insert(tk.END, text)
+            self.narrative_box.config(state=tk.DISABLED)
+        self.root.after(0, update)
+
+    def add_image(self, key, path):
+        def update():
+            try:
+                img = Image.open(path).resize((130, 130))
+                photo = ImageTk.PhotoImage(img)
+                self.image_refs.append(photo)
+
+                frame = tk.Frame(self.images_frame)
+                frame.pack(side=tk.LEFT, padx=5)
+                tk.Label(frame, image=photo).pack()
+                tk.Label(frame, text=key, font=("Arial", 9)).pack()
+            except Exception as e:
+                print(f"Could not display image {key}: {e}")
+        self.root.after(0, update)
+
+    def start_generation(self):
+        self.gen_button.config(state=tk.DISABLED)
+        self.image_refs.clear()
+        for widget in self.images_frame.winfo_children():
+            widget.destroy()
+        self.set_narrative("")
+        for key in self.agent_labels:
+            self.set_agent_status(key, "⏸ Waiting", "gray")
+
+        threading.Thread(target=self.run_pipeline, daemon=True).start()
+
+    def run_pipeline(self):
+        try:
+            # Agent 1
+            self.set_agent_status("agent1", "⏳ Running...", "orange")
+            campaign = generate_campaign()
+            self.set_agent_status("agent1", "✅ Done", "green")
+
+            # Agent 2
+            self.set_agent_status("agent2", "⏳ Running...", "orange")
+            prompts = generate_image_prompts(campaign)
+            self.set_agent_status("agent2", "✅ Done", "green")
+
+            # Agent 3 e 4 in parallelo
+            self.set_agent_status("agent3", "⏳ Running...", "orange")
+            self.set_agent_status("agent4", "⏳ Running...", "orange")
+
+            narrative_result = [None]
+            narrative_done = threading.Event()
+
+            def run_agent4():
+                narrative_result[0] = generate_narrative(campaign)
+                self.set_agent_status("agent4", "✅ Done", "green")
+                self.set_narrative(narrative_result[0])
+                narrative_done.set()
+
+            def run_agent3():
+                generate_images(prompts, self.output_dir, self.add_image)
+                self.set_agent_status("agent3", "✅ Done", "green")
+
+            t3 = threading.Thread(target=run_agent3, daemon=True)
+            t4 = threading.Thread(target=run_agent4, daemon=True)
+            t3.start()
+            t4.start()
+            t3.join()
+            narrative_done.wait()
+
+            # Salva file
+            save_files(narrative_result[0], prompts, campaign, self.output_dir)
+
+            self.root.after(0, lambda: self.gen_button.config(state=tk.NORMAL))
+            print(f"\nDone! Files saved in {self.output_dir}")
+
+        except Exception as e:
+            print(f"Pipeline error: {e}")
+            self.root.after(0, lambda: self.gen_button.config(state=tk.NORMAL))
+
+
+root = tk.Tk()
+app = DnDApp(root)
+root.mainloop()

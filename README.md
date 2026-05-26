@@ -4,6 +4,26 @@ A collection of AI-powered tools built with local LLMs via Ollama.
 
 ---
 
+## Setup
+
+1. Install [Ollama](https://ollama.com) and pull the required models:
+```bash
+ollama pull qwen2.5:14b
+ollama pull nomic-embed-text
+```
+
+2. Install Python dependencies:
+```bash
+python setup.py
+```
+
+3. *(DnD only)* Download the image model (~4GB):
+```bash
+python dnd-generator/setup.py
+```
+
+---
+
 ## 1. AI Text Agent
 
 A desktop tool to correct and translate text files using a local LLM.
@@ -66,6 +86,26 @@ This will download Stable Diffusion v1.5 (~4GB) into `dnd-generator/models/`.
 ```bash
 python dnd-generator/main.py
 ```
+---
+
+## 3. RAG Assistant
+
+A RAG pipeline with multi-query retrieval, reranking, 
+and answer validation built on local LLMs.
+
+**Stack:** Python, LlamaIndex, ChromaDB, Ollama, Tkinter
+
+**Pipeline:**
+- Multi-query retrieval — generates 5 query variants
+- Deduplication — removes duplicate chunks
+- Reranking — LLM scores each chunk for relevance
+- Generation — answers based strictly on context
+- Validation — checks if answer is grounded in context
+
+**Run:**
+\```bash
+python rag-assistant/app.py
+\```
 
 ---
 

@@ -1,0 +1,38 @@
+ACME Tech - Technology Stack
+
+LANGUAGES
+Primary backend language: Python 3.10+
+Frontend: React 18 with TypeScript
+Mobile: React Native
+Scripting and automation: Bash, Python
+
+DATABASES
+Primary database: PostgreSQL 15
+Cache layer: Redis 7
+Search engine: Elasticsearch 8
+Vector database: ChromaDB (used in AI projects)
+
+INFRASTRUCTURE
+Cloud provider: AWS
+Container orchestration: Kubernetes
+CI/CD: GitHub Actions
+Infrastructure as code: Terraform
+Monitoring: Grafana + Prometheus
+
+AI AND MACHINE LEARNING
+LLM framework: LlamaIndex, LangChain
+Local LLM runtime: Ollama
+Model serving: FastAPI
+Experiment tracking: MLflow
+
+VERSION CONTROL
+Git with GitHub
+Branch strategy: GitFlow
+Main branches: main, develop
+Feature branches: feature/*, hotfix/*, release/*
+
+DEVELOPMENT TOOLS
+IDE: VS Code, PyCharm
+Code formatting: Black (Python), Prettier (JS/TS)
+Linting: Flake8 (Python), ESLint (JS/TS)
+Testing: Pytest (Python), Jest (JS/TS)

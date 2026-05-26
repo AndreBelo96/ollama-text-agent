@@ -1,0 +1,36 @@
+ACME Tech - Security Policy
+
+ACCESS CONTROL
+All systems use role-based access control (RBAC).
+Access to production systems requires approval from both the team lead and security team.
+Access is reviewed quarterly and revoked immediately upon offboarding.
+Shared passwords and credentials are strictly prohibited.
+All service accounts must use API keys or OAuth tokens, never personal credentials.
+
+PASSWORDS AND AUTHENTICATION
+All employees must use a password manager. ACME Tech provides 1Password licenses.
+Multi-factor authentication is mandatory for all company accounts.
+Passwords must be at least 16 characters.
+Passwords must be rotated every 90 days for privileged accounts.
+
+DATA HANDLING
+Customer data must never be stored on personal devices.
+Personal data is subject to GDPR compliance requirements.
+Data must be encrypted at rest and in transit.
+Production data must never be used in development or testing environments.
+
+VULNERABILITY MANAGEMENT
+Security vulnerabilities must be reported to security@acmetech.com immediately.
+Critical vulnerabilities must be patched within 24 hours.
+High vulnerabilities must be patched within 7 days.
+Penetration testing is conducted annually by an external firm.
+
+INCIDENT RESPONSE
+Security incidents follow the standard incident management process with additional steps.
+The security team must be notified immediately for any data breach or suspected compromise.
+Do not attempt to investigate a security incident without involving the security team.
+
+TRAINING
+All employees complete security awareness training annually.
+Developers complete secure coding training when joining and annually thereafter.
+Phishing simulations are conducted quarterly.

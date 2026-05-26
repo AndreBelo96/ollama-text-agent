@@ -1,0 +1,31 @@
+ACME Tech - Incident Management
+
+SEVERITY LEVELS
+SEV1 - Critical: complete service outage or data loss. Immediate response required 24/7.
+SEV2 - High: major feature broken, significant user impact. Response within 1 hour.
+SEV3 - Medium: partial degradation, workaround available. Response within 4 hours.
+SEV4 - Low: minor issue, minimal user impact. Response within 1 business day.
+
+RESPONSE PROCESS
+1. Detection: incident detected via monitoring alerts or user report.
+2. Declaration: on-call engineer declares incident and opens a war room on Slack (#incidents).
+3. Assignment: incident commander assigned. For SEV1 a senior engineer is paged immediately.
+4. Communication: status page updated within 15 minutes of SEV1/SEV2 declaration.
+5. Resolution: fix deployed and verified.
+6. Post-mortem: written within 5 business days for SEV1 and SEV2 incidents.
+
+ON-CALL
+On-call rotation is weekly and covers all engineers with more than 6 months tenure.
+On-call engineers receive a 200 euro monthly stipend.
+SEV1 pages outside business hours receive a 100 euro bonus per incident.
+
+POST-MORTEM
+Post-mortems are blameless — the goal is to improve systems, not assign fault.
+They must include: timeline, root cause, impact, action items with owners and deadlines.
+Action items must be completed within 30 days.
+
+TOOLS
+Monitoring: Grafana and Prometheus.
+Alerting: PagerDuty.
+Communication: Slack #incidents channel.
+Status page: status.acmetech.com.

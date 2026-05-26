@@ -1,0 +1,35 @@
+ACME Tech - Products and Services
+
+CORE PRODUCTS
+
+DataPilot
+An AI-powered data analytics platform for enterprise clients.
+Features: automated reporting, anomaly detection, natural language queries.
+Tech: Python backend, React frontend, PostgreSQL, Elasticsearch.
+Clients: financial sector, healthcare, retail.
+Pricing: SaaS subscription starting at 2000 euros/month.
+
+FlowBot
+A workflow automation tool that connects business applications via API.
+Features: drag-and-drop workflow builder, 200+ integrations, real-time monitoring.
+Tech: Node.js backend, React frontend, Redis for queue management.
+Clients: SMEs and mid-market companies.
+Pricing: tiered plans from 99 to 999 euros/month.
+
+SecureVault
+An enterprise document management system with end-to-end encryption.
+Features: version control, access management, audit logs, compliance reporting.
+Tech: Python, PostgreSQL, AWS S3 for storage.
+Clients: legal firms, financial institutions, government agencies.
+Pricing: on-premise or private cloud, custom pricing.
+
+SERVICES
+Custom AI development: bespoke AI solutions for enterprise clients.
+Technical consulting: architecture review, cloud migration, performance optimization.
+Training: workshops on AI, cloud, and modern software development practices.
+
+COMPANY
+Founded: 2018
+Employees: 120
+Headquarters: Milan, Italy
+Offices: Rome, London, Berlin

@@ -1,0 +1,28 @@
+ACME Tech - Onboarding Guide
+
+WEEK 1
+Day 1: HR orientation, sign contracts, receive equipment.
+Day 2: IT setup — laptop configuration, access to GitHub, Slack, and internal tools.
+Day 3-4: Meet your team, attend daily standups, read technical documentation.
+Day 5: First task assignment — usually a small bug fix or documentation update.
+
+WEEK 2-4
+Shadow senior developers on ongoing projects.
+Complete mandatory security training available on the internal LMS.
+Set up local development environment using the onboarding repository.
+Attend your first sprint planning and retrospective.
+
+FIRST 3 MONTHS
+Complete at least one full feature from design to deployment.
+Schedule monthly 1:1 with your manager to discuss progress and goals.
+Join at least one internal community of practice (AI, DevOps, Frontend, etc.)
+
+TOOLS ACCESS
+Request access to tools via the IT portal at it.acmetech.internal.
+Standard tools provisioned on day 1: Slack, GitHub, Jira, Confluence.
+Access to production systems is granted after 30 days and security training completion.
+
+CONTACTS
+HR: hr@acmetech.com
+IT Support: it-support@acmetech.com
+Your buddy (assigned on day 1): check your welcome email.

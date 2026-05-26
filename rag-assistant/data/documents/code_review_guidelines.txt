@@ -1,0 +1,32 @@
+ACME Tech - Code Review Guidelines
+
+GENERAL PRINCIPLES
+Code review is mandatory for all changes to main and develop branches.
+No one merges their own pull request except in emergencies.
+Reviews should be constructive, specific, and respectful.
+The goal is to improve code quality, not to find fault.
+
+PULL REQUEST STANDARDS
+PRs should be small and focused — ideally under 400 lines of changes.
+Every PR must include a description of what changed and why.
+Link the related Jira ticket in the PR description.
+PRs must pass all CI checks before requesting review.
+At least one approval is required before merging. Senior PRs require two approvals.
+
+REVIEW CHECKLIST
+- Does the code do what it claims to do?
+- Are there unit tests for new functionality?
+- Is error handling appropriate?
+- Are there any security concerns?
+- Is the code readable and well documented?
+- Does it follow our naming conventions?
+
+RESPONSE TIME
+Reviewers should respond within 1 business day.
+If unavailable, notify the author so they can find another reviewer.
+Stale PRs open for more than 7 days without activity are flagged in Slack.
+
+MERGING
+Squash and merge is the preferred strategy for feature branches.
+Merge commits are allowed for release branches.
+Delete the branch after merging.

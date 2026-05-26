@@ -323,9 +323,7 @@ def rerank(nodes, question, top_n=3):
 # ─────────────────────────────────────────────────────────────
 
 def build_context(nodes):
-    """
-    Costruisce contesto leggibile per il prompt.
-    """
+    """ Costruisce contesto leggibile per il prompt. """
 
     context_parts = []
 
@@ -342,17 +340,17 @@ def build_context(nodes):
 
         context_parts.append(
             f"""
-[Source {i+1}]
-
-File:
-{source}
-
-Relevance Score:
-{score}
-
-Content:
-{node.text}
-"""
+            [Source {i+1}]
+            
+            File:
+            {source}
+            
+            Relevance Score:
+            {score}
+            
+            Content:
+            {node.text}
+            """
         )
 
     return "\n\n---\n\n".join(context_parts)
